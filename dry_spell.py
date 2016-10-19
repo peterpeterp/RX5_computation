@@ -59,61 +59,71 @@ def test_dry_spell_identifier(N):
 
 
 
+MODEL='HadGEM2-ES'
+model=MODEL.lower()
 
-nc_in=Dataset('data/raw/pr_bced_1960_1999_hadgem2-es_rcp2p6_2011-2020.nc4',"r")
-tmp=nc_in.variables['pr'][:,:,:]
-pr=np.ma.getdata(tmp)*86400
-mask=np.ma.getmask(tmp)
-del tmp
-gc.collect()
+all_files=glob.glob('/p/projects/isimip/isimip/inputdata_bced/'+MODEL+'/pr_bced_*'+model+'*_historical_*')
 
-pr=np.array(pr,'i')
-pr[pr<1]=0
-pr[pr>=1]=1
-pr[mask]=99
+first=True
+index=0
 
-del mask
-gc.collect()
+for file in all_files:
+	print(file)
+	nc_in=Dataset(file,"r")
+	#nc_in=Dataset('data/raw/pr_bced_1960_1999_hadgem2-es_rcp2p6_2011-2020.nc4',"r")
+	tmp=nc_in.variables['pr'][:,:,:]
+	pr=np.ma.getdata(tmp)*86400
+	mask=np.ma.getmask(tmp)
+	del tmp
+	gc.collect()
 
-per=np.zeros(pr.shape)
+	pr=np.array(pr,'i')
+	pr[pr<1]=0
+	pr[pr>=1]=1
+	pr[mask]=99
 
-for y in range(360):
-	print y
-	for x in range(720):
-		ind=pr[:,y,x]
-		if len(np.where(ind==99)[0])<1000:
-			per[:,y,x]=dry_period_identifier(ind)
+	del mask
+	gc.collect()
 
-# extract time information
-time=nc_in.variables['time'][:]
-time_unit=nc_in.variables['time'].units
-datevar = []
-try:	# check if there is calendar information
-	cal_temps = nc_in.variables['time'].calendar
-	datevar.append(num2date(time,units = time_unit,calendar = cal_temps))
-except:
-	datevar.append(num2date(time,units = time_unit))
+	per=np.zeros(pr.shape)
+	gc.collect()
 
-years=np.array([int(str(date).split("-")[0]) for date in datevar[0][:]])
-months=np.array([int(str(date).split("-")[1]) for date in datevar[0][:]])
+	for y in range(360):
+		for x in range(720):
+			ind=pr[:,y,x]
+			if len(np.where(ind==99)[0])<1000:
+				per[:,y,x]=dry_period_identifier(ind)
 
-first,index=True,0
-# create or extend output array
-if first:
-	dry_spell=np.zeros([len(set(years))*12,360,720])
-	out_time=np.zeros([len(set(years))*12])
-	first=False
-else:
-	dry_spell=np.append(dry_spell,np.zeros([len(set(years))*12,360,720]))
-	out_time=np.append(out_time,np.zeros([len(set(years))*12]))
+	# extract time information
+	time=nc_in.variables['time'][:]
+	time_unit=nc_in.variables['time'].units
+	datevar = []
+	try:	# check if there is calendar information
+		cal_temps = nc_in.variables['time'].calendar
+		datevar.append(num2date(time,units = time_unit,calendar = cal_temps))
+	except:
+		datevar.append(num2date(time,units = time_unit))
 
-# find monthly maximum
-for yr in sorted(set(years)):
-	for mth in sorted(set(months)):
-		days_in_month=np.where((years==yr) & (months==mth))[0]
-		dry_spell[index,:,:]=np.max(per[days_in_month,:,:],axis=0)
-		out_time[index]=time[max(days_in_month)]
-		index+=1
+	years=np.array([int(str(date).split("-")[0]) for date in datevar[0][:]])
+	months=np.array([int(str(date).split("-")[1]) for date in datevar[0][:]])
+
+	first,index=True,0
+	# create or extend output array
+	if first:
+		dry_spell=np.zeros([len(set(years))*12,360,720])
+		out_time=np.zeros([len(set(years))*12])
+		first=False
+	else:
+		dry_spell=np.append(dry_spell,np.zeros([len(set(years))*12,360,720]))
+		out_time=np.append(out_time,np.zeros([len(set(years))*12]))
+
+	# find monthly maximum
+	for yr in sorted(set(years)):
+		for mth in sorted(set(months)):
+			days_in_month=np.where((years==yr) & (months==mth))[0]
+			dry_spell[index,:,:]=np.max(per[days_in_month,:,:],axis=0)
+			out_time[index]=time[max(days_in_month)]
+			index+=1
 
 
 # copy netcdf and write zoomed file
@@ -144,7 +154,6 @@ for v_name, varin in nc_in.variables.iteritems():
 nc_out.close()
 nc_in.close()
 
-#np.save('data/raw/persistence_test',per)
 
 
 
