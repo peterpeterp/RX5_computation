@@ -4,22 +4,6 @@ import pandas as pd
 from netCDF4 import Dataset,netcdftime,num2date
 import collections
 
-def dry_period_identifier(ind):
-	# not straight forward but faster
-	su=np.cumsum(ind)
-	counter=collections.Counter(su)
-
-	dry=ind*0
-	index=0
-	if ind[0]==0 and ind[1]==1:
-		dry[0]=1
-	for count,val in zip(counter.values(),counter.keys()):
-		index+=count
-		if count>1:
-			dry[index-(count-1)/2-1]=count-1
-
-	return(dry)
-
 def basic_and_understandable(ind):
 	dry=ind*0
 	state,count=0,0
@@ -40,6 +24,23 @@ def basic_and_understandable(ind):
 	if state==0:	dry[i-count/2]=((-1)**0)*count
 
 	return(dry)
+
+def dry_period_identifier(ind):
+	# not straight forward but faster
+	su=np.cumsum(ind)
+	counter=collections.Counter(su)
+
+	dry=ind*0
+	index=0
+	if ind[0]==0 and ind[1]==1:
+		dry[0]=1
+	for count,val in zip(counter.values(),counter.keys()):
+		index+=count
+		if count>1:
+			dry[index-(count-1)/2-1]=count-1
+
+	return(dry)
+
 
 def test_dry_spell_identifier(N):
 	ind=np.random.random(N)
@@ -81,18 +82,7 @@ for y in range(360):
 	for x in range(720):
 		ind=pr[:,y,x]
 		if len(np.where(ind==99)[0])<1000:
-			state,count=0,0
-			for i in range(pr.shape[0]):
-				if ind[i]==state:
-					count+=1
-				if ind[i]!=state:
-					per[i-count/2-1,y,x]=((-1)**state)*count
-					count=0
-					if ind!=99:
-						state+=1
-						if state==2:
-							state=0
-						count=1
+			per[:,y,x]=dry_period_identifier(ind)
 
 # extract time information
 time=nc_in.variables['time'][:]
