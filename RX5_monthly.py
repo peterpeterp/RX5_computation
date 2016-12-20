@@ -73,7 +73,7 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 	# Copy variables
 	for v_name, varin in nc_in.variables.iteritems():
 		if v_name=='pr':	
-			outVar = nc_out.createVariable('Rx5_monthly', varin.datatype, varin.dimensions)					    
+			outVar = nc_out.createVariable('rx5', varin.datatype, varin.dimensions)					    
 			outVar.setncattr('long_name','monthly maximal 5 day cumulative precipitation')
 			outVar.setncattr('units','mm')
 			outVar.setncattr('comment','includes all types (rain, snow, large-scale, convective, etc.)')
@@ -90,3 +90,16 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 	# close the output file
 	nc_out.close()
 	nc_in.close()
+
+
+# merge historic rcp
+if (False):
+	import os,glob,sys,gc
+	models=["GFDL-ESM2M","HadGEM2-ES","IPSL-CM5A-LR","MIROC-ESM-CHEM","NorESM1-M"]
+	for model in models:
+		for scenario in ['rcp2p6','rcp8p5']:
+			os.system('cdo mergetime /p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_historical_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_'+scenario+'_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/mon_rx5_1960-1999_'+model.lower()+'_'+scenario+'_1950-2099.nc4')
+
+
+
+
