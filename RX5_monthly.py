@@ -13,6 +13,7 @@ print 'job_id=',job_id
 
 for scenario in ["rcp2p6","rcp8p5",'historical']:
 	all_files=glob.glob('/p/projects/isimip/isimip/inputdata_bced/'+models[job_id]+'/pr_bced_*'+models[job_id].lower()+'*'+scenario+'*')
+	all_files.sort()
 	first=True
 	index=0
 
@@ -93,7 +94,7 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 
 
 # merge historic rcp
-if (False):
+if False:
 	import os,glob,sys,gc
 	models=["GFDL-ESM2M","HadGEM2-ES","IPSL-CM5A-LR","MIROC-ESM-CHEM","NorESM1-M"]
 	for model in models:
