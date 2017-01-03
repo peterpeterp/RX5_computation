@@ -1,3 +1,10 @@
+####################
+# RX5 monthly (cut)
+####################
+'''
+moving sum computed for each month. cut between months (4 first values ignored)
+'''
+
 import os,glob,sys,gc
 import numpy as np 
 import pandas as pd

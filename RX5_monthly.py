@@ -1,3 +1,10 @@
+####################
+# RX5 monthly (cut)
+####################
+'''
+moving sum for the whole time series. maxima selected within one month. RX5 of June could include pr days from Mai for example.
+'''
+
 import os,glob,sys,gc
 import numpy as np 
 import pandas as pd
