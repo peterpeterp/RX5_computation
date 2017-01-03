@@ -8,10 +8,10 @@ from netCDF4 import Dataset,netcdftime,num2date
 #all_files=glob.glob('data/raw/pr_bced_1960_1999_hadgem2-es_rcp2p6_2011-2020.*')
 models=["GFDL-ESM2M","HadGEM2-ES","IPSL-CM5A-LR","MIROC-ESM-CHEM","NorESM1-M"]
 
-job_id=int(os.environ["SLURM_ARRAY_TASK_ID"])
+job_id=1
 print 'job_id=',job_id
 
-for scenario in ["rcp2p6","rcp8p5",'historical']:
+for scenario in ["rcp2p6",'historical']:
 	all_files=glob.glob('/p/projects/isimip/isimip/inputdata_bced/'+models[job_id]+'/pr_bced_*'+models[job_id].lower()+'*'+scenario+'*')
 	all_files.sort()
 	first=True
@@ -55,7 +55,9 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 		for yr in sorted(set(years)):
 			for mth in sorted(set(months)):
 				days_in_month=np.where((years==yr) & (months==mth))[0]
-				rx5[index,:,:]=np.max(movsum[days_in_month,:,:],axis=0)
+				# the 4 first values of each month are ignored 
+				# thats what happened in the R version
+				rx5[index,:,:]=np.max(movsum[days_in_month[5:],:,:],axis=0)
 				out_time[index]=time[max(days_in_month)]
 				index+=1
 		
@@ -68,7 +70,7 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 
 
 
-	out_file='/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+models[job_id]+'_'+scenario+'_1950-2099.nc4'
+	out_file='/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+models[job_id]+'_'+scenario+'_1950-2099_reproduce.nc4'
 	os.system("rm "+out_file)
 	nc_out=Dataset(out_file,"w")
 	for dname, the_dim in nc_in.dimensions.iteritems():
@@ -98,12 +100,10 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 
 
 # merge historic rcp
-if False:
-	import os,glob,sys,gc
-	models=["GFDL-ESM2M","HadGEM2-ES","IPSL-CM5A-LR","MIROC-ESM-CHEM","NorESM1-M"]
-	for model in models:
-		for scenario in ['rcp2p6','rcp8p5']:
-			os.system('cdo mergetime /p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_historical_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_'+scenario+'_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/mon_rx5_1960-1999_'+model.lower()+'_'+scenario+'_1950-2099.nc4')
+import os,glob,sys,gc
+model="HadGEM2-ES"
+for scenario in ['rcp2p6']:
+	os.system('cdo mergetime /p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_historical_1950-2099_reproduce.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_'+scenario+'_1950-2099_reproduce.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/mon_rx5_1960-1999_'+model.lower()+'_'+scenario+'_1950-2099_reproduce.nc4')
 
 
 

@@ -10,6 +10,7 @@ models=["GFDL-ESM2M","HadGEM2-ES","IPSL-CM5A-LR","MIROC-ESM-CHEM","NorESM1-M"]
 
 job_id=int(os.environ["SLURM_ARRAY_TASK_ID"])
 print 'job_id=',job_id
+# job_id=1
 
 for scenario in ["rcp2p6","rcp8p5",'historical']:
 	all_files=glob.glob('/p/projects/isimip/isimip/inputdata_bced/'+models[job_id]+'/pr_bced_*'+models[job_id].lower()+'*'+scenario+'*')
@@ -47,15 +48,14 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 
 		pr=nc_in.variables['pr'][:,:,:]
 
-		# get moving sum
-		movsum=np.cumsum(pr,axis=0)
-		movsum[5:]=movsum[5:]-movsum[:-5]
-
 		# find monthly maximum
 		for yr in sorted(set(years)):
 			for mth in sorted(set(months)):
 				days_in_month=np.where((years==yr) & (months==mth))[0]
-				rx5[index,:,:]=np.max(movsum[days_in_month,:,:],axis=0)
+				# get moving sum
+				movsum=np.cumsum(pr[days_in_month,:,:],axis=0)
+				movsum[5:]=movsum[5:]-movsum[:-5]
+				rx5[index,:,:]=np.max(movsum[4:,:,:],axis=0)
 				out_time[index]=time[max(days_in_month)]
 				index+=1
 		
@@ -68,7 +68,7 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 
 
 
-	out_file='/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+models[job_id]+'_'+scenario+'_1950-2099.nc4'
+	out_file='/p/projects/tumble/carls/shared_folder/rx5/R_rx5/raw/mon_rx5_1960-1999_'+models[job_id]+'_'+scenario+'_1950-2099.nc4'
 	os.system("rm "+out_file)
 	nc_out=Dataset(out_file,"w")
 	for dname, the_dim in nc_in.dimensions.iteritems():
@@ -98,12 +98,12 @@ for scenario in ["rcp2p6","rcp8p5",'historical']:
 
 
 # merge historic rcp
-if False:
+if True:
 	import os,glob,sys,gc
 	models=["GFDL-ESM2M","HadGEM2-ES","IPSL-CM5A-LR","MIROC-ESM-CHEM","NorESM1-M"]
 	for model in models:
 		for scenario in ['rcp2p6','rcp8p5']:
-			os.system('cdo mergetime /p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_historical_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/raw/mon_rx5_1960-1999_'+model+'_'+scenario+'_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/mon_rx5_1960-1999_'+model.lower()+'_'+scenario+'_1950-2099.nc4')
+			os.system('cdo mergetime /p/projects/tumble/carls/shared_folder/rx5/R_rx5/raw/mon_rx5_1960-1999_'+model+'_historical_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/R_rx5/raw/mon_rx5_1960-1999_'+model+'_'+scenario+'_1950-2099.nc4 '+'/p/projects/tumble/carls/shared_folder/rx5/R_rx5/mon_rx5_1960-1999_'+model.lower()+'_'+scenario+'_1950-2099.nc4')
 
 
 

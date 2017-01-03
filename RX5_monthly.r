@@ -3,6 +3,8 @@ library("RNetCDF")
 
 movsum <- function(x,n=5){filter(x,rep(1,n), sides=1)}
 
+#compute_rx5_cmip5(model="HadGEM2-ES",scenario="rcp2p6",path=paste("/p/projects/isimip/isimip/inputdata_bced/","HadGEM2-ES","/",sep=""))
+
 
 compute_rx5_cmip5 <- function(model,scenario,path){
     print(paste(model,scenario,path))
@@ -25,6 +27,9 @@ compute_rx5_cmip5 <- function(model,scenario,path){
                     selected_year<-years==yr
                     selected_month<-months==mth
                     selected_days<-which(selected_year+selected_month==2)
+                    print(selected_days)
+                    print(movsum(pr[355,171,selected_days],5))
+                    asdasd
                     time_out[index]<-time[max(selected_days)]
                     rx5[,,index]<-apply(pr[,,selected_days],c(1,2),function(x) max(movsum(x,5),na.rm=TRUE))
                 }
